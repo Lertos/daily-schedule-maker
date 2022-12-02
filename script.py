@@ -2,9 +2,11 @@ import calendar
 from datetime import date
 from fpdf import FPDF
 
-output_path = r'C:\Users\Dylan\Downloads\output.pdf'
+output_path = r'C:\Users\Dylan\Downloads\schedule.pdf'
+schedule_start_date = '2022-11-19'
+schedule_end_date = '2023-02-07'
 
-boxes = ['Workout', 'Read Book', 'Read Article', 'Practice Typing', 'No Junk', 'CS Learning', 'Project Work']
+boxes = ['Workout', 'Read Book', 'Family', 'Friends', 'No Junk', 'Learning (45m+)', 'Project Work']
 
 obj_calendar = calendar.Calendar()
 
@@ -34,27 +36,39 @@ class PDF(FPDF):
         elif start_year == end_year:
             dates = obj_calendar.yeardatescalendar(start_year, 1)
         else:
-            for year in range(start_year, end_year):
+            for year in range(start_year, end_year + 1):
                 year_calendar = obj_calendar.yeardatescalendar(year, 1)
                 dates.append(year_calendar)
         
         current_dates = []
-        
+
         for year in dates:
             for month in year:
                 for week in month:
                     for day in week:
-                        if day < start_date_obj or day in current_dates:
-                            continue
-                        elif day >= end_date_obj:
-                            break
+                        if type(day) == list:
+                            for properDay in day:
+                                if properDay < start_date_obj or properDay in current_dates:
+                                    continue
+                                elif properDay >= end_date_obj:
+                                    break
+
+                                formatted_date = date.strftime(properDay, '%a - %B %d, %Y')
+
+                                self.record_for_date(formatted_date)
+                                current_dates.append(properDay)
+                        else:
+                            if day < start_date_obj or day in current_dates:
+                                continue
+                            elif day >= end_date_obj:
+                                break
                         
-                        formatted_date = date.strftime(day, '%a - %B %d, %Y')
-                        
-                        self.record_for_date(formatted_date)
-                        current_dates.append(day)
-                        
-                        #print(date.strftime(day, '%B %d, %Y'))
+                            formatted_date = date.strftime(day, '%a - %B %d, %Y')
+
+                            self.record_for_date(formatted_date)
+                            current_dates.append(day)
+
+                            #print(date.strftime(day, '%B %d, %Y'))
 
         
     def get_font_size(self, font_size):
@@ -85,7 +99,7 @@ class PDF(FPDF):
         for box in boxes:
             pdf.rect(pdf.get_x(), pdf.get_y(), size, size)
 
-            pdf.set_x(pdf.get_x() + size)
+            pdf.set_x(pdf.get_x() + size + 1)
             pdf.write(5, box)
 
             pdf.set_x(pdf.get_x() + size)
@@ -103,6 +117,6 @@ pdf = PDF()
 pdf.add_page()
 
 #Start Date and End Date uses: YYYY-MM-DD
-pdf.create_pdf('2022-08-31', '2022-10-30')
+pdf.create_pdf(schedule_start_date, schedule_end_date)
 
 pdf.output(output_path, 'F')
